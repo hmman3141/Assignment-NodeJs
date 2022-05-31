@@ -1,0 +1,22 @@
+{
+  "name": "assignment-nodejs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "command.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hmman3141/Assignment-NodeJs.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hmman3141/Assignment-NodeJs/issues"
+  },
+  "homepage": "https://github.com/hmman3141/Assignment-NodeJs#readme",
+  "bin": {
+    "project-cli": "./command.js"
+  }
+}
