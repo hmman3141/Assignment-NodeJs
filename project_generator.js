@@ -8,6 +8,15 @@ const create = () => {
     const data = fs.readFileSync(__dirname + "/package.json", { encoding: 'utf8', flag: 'r' });
     var jsonData = JSON.parse(data);
 
+    var dir = __dirname + '/node_models';
+    if (!fs.existsSync(dir))
+        child = exec(`npm install`,
+            function (error) {
+                if (error !== null) {
+                    console.log('exec error: ' + error);
+                }
+            })
+
     if (Object.keys(jsonData).includes('dependencies')) {
 
         ['dotenv', 'express', 'nodemon', 'ejs'].forEach((ele) => {
@@ -161,14 +170,16 @@ const database = () => {
     readline.question("Database(mysql/mongodb): ", database => {
         var env = "";
         var lib = '';
+        var content = '';
         var exec = require('child_process').exec,
             child;
 
         switch (database.toLowerCase()) {
             case 'mysql': {
                 env = "DATABASE=mysql\nHOST=localhost\nUSER=root\nPASSWORD=root\nPORT=32769\nDBNAME=mydb";
-                lib = 'knex mysql';
-                var content = `const { host, port, user, password, dbName } = require('../settings')
+                lib = 'knex mysql objection';
+                content = `const { Model } = require('objection');
+const { host, port, user, password, dbName } = require('../settings')
 
 var conn = {
     host: host,
@@ -188,7 +199,7 @@ class Database {
     }
 
     _connect() {
-        knex.raw('CREATE DATABASE IF NOT EXISTS ' + dbName).then(function () {
+        knex.raw('CREATE DATABASE IF NOT EXISTS ' + dbName).then(() => {
             knex.destroy();
         });
     }
@@ -199,6 +210,26 @@ module.exports = { Database }`;
                 fs.writeFile(__dirname + '/src/connectdb.js', content, (err) => {
                     if (err) throw err;
                 })
+
+                content = `const {Database} = require('./src/connectdb.js')
+new Database();
+
+const { Model } = require('objection');
+const { host, port, user, password, dbName } = require('./settings')
+var conn = {
+    host: host,
+    port: port,
+    user: user,
+    password: password,
+    database: dbName
+}
+const db = require('knex')({
+    client: 'mysql',
+    connection: conn
+})
+Model.knex(db);
+
+const app = express();`;
 
                 break;
             }
@@ -230,6 +261,8 @@ module.exports = {Database}`;
                     if (err) throw err;
                 })
 
+                content = `const {Database} = require('./src/connectdb.js')\nnew Database();\n\nconst app = express();`;
+
                 break;
             }
             default: {
@@ -253,12 +286,13 @@ module.exports = {Database}`;
                     uninstalled_lib += `${ele} `;
             })
 
-            child = exec(`npm install ${uninstalled_lib}`,
-                function (error) {
-                    if (error !== null) {
-                        console.log('exec error: ' + error);
-                    }
-                })
+            if (uninstalled_lib !== '')
+                child = exec(`npm install ${uninstalled_lib}`,
+                    function (error) {
+                        if (error !== null) {
+                            console.log('exec error: ' + error);
+                        }
+                    })
         } else {
             child = exec(`npm install ${lib}`,
                 function (error) {
@@ -269,10 +303,34 @@ module.exports = {Database}`;
         }
 
         data = fs.readFileSync(__dirname + "/app.js", { encoding: 'utf8', flag: 'r' });
-        var content = `const {Database} = require('./src/connectdb.js')\nnew Database();\n\nconst app = express();`;
         if (!data.includes(content)) {
+            [`\nconst {Database} = require('./src/connectdb.js')
+new Database();
+
+const { Model } = require('objection');
+const { host, port, user, password, dbName } = require('./settings')
+var conn = {
+    host: host,
+    port: port,
+    user: user,
+    password: password,
+    database: dbName
+}
+const db = require('knex')({
+    client: 'mysql',
+    connection: conn
+})
+Model.knex(db);
+`
+                ,
+                `\nconst {Database} = require('./src/connectdb.js')\nnew Database();\n`].forEach(ele => {
+                    if (ele !== content && data.includes(ele)) {
+                        var data_split = data.split(ele);
+                        data = data_split[0] + data_split[1];
+                    }
+                })
             var arr = data.split('const app = express();');
-            fs.writeFile('app.js', arr[0] + `const {Database} = require('./src/connectdb.js')\nnew Database();\n\nconst app = express();` + arr[1], (err) => {
+            fs.writeFile('app.js', arr[0] + content + arr[1], (err) => {
                 if (err) throw err;
             });
         }
@@ -287,6 +345,42 @@ const model = () => {
     var model, controller;
     switch (database) {
         case 'mysql': {
+            model = `const {Model} = require('objection')
+
+class User extends Model {
+    static get tableName() {
+        return 'user'
+    }
+}
+
+module.exports = User`;
+
+            controller = `const User = require('../models/User');
+
+class Controller {
+    async List(req, res) {
+        try{
+            const user = await User.query().select('*');
+            return user;
+        }catch(err){
+            console.log(err);
+        }
+    }
+}
+
+module.exports = new Controller;`;
+
+            var content = `const express = require('express');
+const router = express.Router();
+const userController = require('../controllers/User');
+
+router.get('/', userController.List);
+
+module.exports = router;`
+            fs.writeFile(__dirname + '/src/routes/User.js', content, (err) => {
+                if (err) throw err;
+            });
+
             break;
         }
         case 'mongodb': {
