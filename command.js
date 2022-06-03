@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 const fs = require('fs');
+const path = require('path');
 const { create, script, database, seed, model } = require('./project_generator');
 
 process.stdout.write('\033c');
 
-dir = __dirname + '/package.json';
+dir = path.join(__dirname, 'package.json');
 if (!fs.existsSync(dir)) {
     console.log('Please create package.json first using npm init.');
     process.exit(1);
@@ -22,22 +23,23 @@ switch (process.argv[2]) {
     }
 
     case 'database': {
-        dir = __dirname + '/settings.js';
+        dir = path.join(__dirname, 'settings.js');
         if (!fs.existsSync(dir)) {
             console.log(`Please use the 'project-cli create' command to create mvc project first.`);
             process.exit(1);
         }
+
         database();
         break;
     }
 
     case 'model': {
-        dir = __dirname + '/src';
+        dir = path.join(__dirname, 'src');
         if (!fs.existsSync(dir)) {
             console.log(`Please use the 'project-cli create' command to create mvc project first.`);
             process.exit(1);
         }
-        if (!fs.existsSync(dir+'/connectdb.js')) {
+        if (!fs.existsSync(path.join(dir, 'connectdb.js'))) {
             console.log(`Please use the 'project-cli database' command to create database first.`);
             process.exit(1);
         }
@@ -46,6 +48,16 @@ switch (process.argv[2]) {
     }
 
     case 'seed': {
+        dir = path.join(__dirname, 'src');
+        if (!fs.existsSync(dir)) {
+            console.log(`Please use the 'project-cli create' command to create mvc project first.`);
+            process.exit(1);
+        }
+        if (!fs.existsSync(path.join(dir, 'connectdb.js'))) {
+            console.log(`Please use the 'project-cli database' command to create database first.`);
+            process.exit(1);
+        }
+        seed();
         break;
     }
 
