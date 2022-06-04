@@ -1,22 +1,28 @@
 {
-  "name": "assignment-nodejs",
+  "name": "assignment-1",
   "version": "1.0.0",
   "description": "",
-  "main": "command.js",
+  "main": "backup.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/hmman3141/Assignment-NodeJs.git"
+    "test": "jest",
+    "start": "node app.js",
+    "debug": "nodemon --trace-warnings app.js"
   },
   "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/hmman3141/Assignment-NodeJs/issues"
-  },
-  "homepage": "https://github.com/hmman3141/Assignment-NodeJs#readme",
   "bin": {
     "project-cli": "./command.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.20.0",
+    "dotenv": "^16.0.1",
+    "ejs": "^3.1.8",
+    "express": "^4.18.1",
+    "jest": "^28.1.0",
+    "knex": "^2.1.0",
+    "mongoose": "^6.3.5",
+    "mysql": "^2.18.1",
+    "nodemon": "^2.0.16",
+    "objection": "^3.0.1"
   }
 }

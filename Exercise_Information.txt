@@ -1,0 +1,9 @@
+Assessment 1: Viết chương trình cho phép người dùng đổi lương gross sang net:
+- Chương trình hỗ trợ CLI để người lập trình có thể:
++ Generate cấu trúc project từ ban đầu theo MVC và OOP.
++ Cho phép người dùng chọn giữa mysql và mongo
++ cho phép phát sinh model bằng CLI
++ Cho phép seed master data
+- Giao diện cho người dùng nhập lương Gross và sinh ra lương Net theo luật hiện tại
+- Sử dụng docker và docker-compose
+- Có unit test và coverage > 70%

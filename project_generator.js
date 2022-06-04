@@ -7,7 +7,7 @@ const create = () => {
         child;
     var lib = '';
 
-    const data = fs.readFileSync(path.join(__dirname, "package.json"), { encoding: 'utf8', flag: 'r' });
+    var data = fs.readFileSync(path.join(__dirname, "package.json"), { encoding: 'utf8', flag: 'r' });
     var jsonData = JSON.parse(data);
 
     var dir = path.join(__dirname, 'node_models');
@@ -21,7 +21,7 @@ const create = () => {
 
     if (Object.keys(jsonData).includes('dependencies')) {
 
-        ['dotenv', 'express', 'nodemon', 'ejs', 'body-parser'].forEach((ele) => {
+        ['dotenv', 'express', 'nodemon', 'ejs', 'body-parser', 'jest'].forEach((ele) => {
             if (!Object.keys(jsonData.dependencies).includes(ele))
                 lib += `${ele}  `;
         })
@@ -33,7 +33,7 @@ const create = () => {
                     }
                 })
     } else {
-        child = exec(`npm install dotenv express nodemon ejs body-parser`,
+        child = exec(`npm install dotenv express nodemon ejs body-parser jest`,
             function (error) {
                 if (error !== null) {
                     console.log('exec error: ' + error);
@@ -89,19 +89,20 @@ const create = () => {
             if (err) throw err;
         })
     }
-}
 
-const script = () => {
-    const data = fs.readFileSync(path.join(__dirname, "package.json"), { encoding: 'utf8', flag: 'r' });
+    data = fs.readFileSync(path.join(__dirname, "package.json"), { encoding: 'utf8', flag: 'r' });
     var jsonData = JSON.parse(data);
 
     jsonData.scripts.start = "node app.js";
     jsonData.scripts.debug = "nodemon --trace-warnings app.js";
+    jsonData.scripts.test = "jest"
     fs.writeFile(path.join(__dirname, "package.json"), JSON.stringify(jsonData, null, 2), (err) => {
         if (err) throw err;
     });
     console.log(`Use "npm run start" to start the project.`);
     console.log(`Use "npm run debug" to start the project in dev mode.`);
+    console.log(`Use "npm run test" to start unit test.`);
+
 }
 
 const database = () => {
@@ -264,6 +265,27 @@ const model = () => {
     }
 
     const data = fs.readFileSync(path.join(__dirname, "app.js"), { encoding: 'utf8', flag: 'r' });
+
+    var dir = path.join(__dirname, 'src', 'services');
+    if (!fs.existsSync(dir))
+        fs.mkdirSync(dir);
+
+    fs.writeFile(path.join(dir, 'grossToNet.js'), generation_script.model.services, (err) => {
+        if (err) throw err;
+    })
+
+    var dir = path.join(__dirname, '__test__');
+    if (!fs.existsSync(dir))
+        fs.mkdirSync(dir);
+
+    fs.writeFile(path.join(dir, 'grossToNet.js'), generation_script.model.unittest.grossToNet, (err) => {
+        if (err) throw err;
+    })
+
+    fs.writeFile(path.join(dir, 'grossToNet.test.js'), generation_script.model.unittest.grossToNet_testjs, (err) => {
+        if (err) throw err;
+    })
+
     if (!data.includes(generation_script.model.app)) {
         var split_position = `app.listen(3000, () => {
     console.log('App is listening on port 3000');
@@ -309,4 +331,4 @@ const seed = () => {
     });
 }
 
-module.exports = { create, script, database, seed, model };
+module.exports = { create, database, seed, model };

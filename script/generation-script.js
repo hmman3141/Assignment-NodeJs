@@ -40,7 +40,12 @@ module.exports = {
                 controller: model.mongo.InsuranceTax.controller
             }
         },
-        app: model.app
+        app: model.app,
+        services: model.services,
+        unittest: {
+            grossToNet: model.unittest.grossToNet,
+            grossToNet_testjs: model.unittest.grossToNet_testjs
+        }
     },
     seed: {
         mysql: seed.mysql,

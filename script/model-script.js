@@ -56,7 +56,7 @@ module.exports = new Controller;`
     },
 
     mongo: {
-        PersonalIncomeTax:{
+        PersonalIncomeTax: {
             model: `const mongoose = require('mongoose')
 const schema = new mongoose.Schema({
     tax: {
@@ -90,7 +90,7 @@ class Controller {
 module.exports = new Controller;`
         },
 
-        InsuranceTax:{
+        InsuranceTax: {
             model: `const mongoose = require('mongoose')
 const schema = new mongoose.Schema({
     name: {
@@ -123,23 +123,33 @@ module.exports = new Controller;`
     },
 
     app: `app.post('/', async (request, response) => {
-    let gross, socialInsurance, healthInsurance, unemploymentInsurance, tax, net;
+    let gross, tax;
 
-    let insuranceController = require('./src/controllers/InsuranceTax');
-    let personalIncomeController = require('./src/controllers/PersonalIncomeTax');
+    let grossToNet = require('./src/services/grossToNet')
 
     gross = parseInt(request.body.gross);
     var area = parseInt(request.body.area),
-        dependents = request.body.dependents || 0,
-        unemploymentTaxMax = [884000, 784000, 686000, 614000],
-        socialTaxMax = 2384000,
-        healthTaxMax = 447000,
-        PersonalIncomeTaxDeduction = 11000000,
-        FamilyDeduction = 4400000;
+        dependents = request.body.dependents || 0;
 
-    net = parseInt(gross);
+    response.render('index', await grossToNet.toNet(area, gross, dependents));
+})`,
+
+    services: `const insuranceController = require('../controllers/InsuranceTax')
+const personalIncomeController = require('../controllers/PersonalIncomeTax')
+
+async function insuranceCalculator(area, gross) {
+    if (gross == null || area == null || area <= 0 || area >= 5)
+        return NaN;
+
+    if (gross <= 0)
+        return 0;
 
     const insurances = await insuranceController.List();
+    var unemploymentTaxMax = [884000, 784000, 686000, 614000],
+        socialTaxMax = 2384000,
+        healthTaxMax = 447000,
+        socialInsurance, healthInsurance, unemploymentInsurance;
+
     insurances.forEach((item) => {
         switch (item.name) {
             case 'Social insurance': {
@@ -163,14 +173,25 @@ module.exports = new Controller;`
         }
     })
 
-    net = net - (socialInsurance + healthInsurance + unemploymentInsurance);
+    return { socialInsurance: socialInsurance, healthInsurance: healthInsurance, unemploymentInsurance: unemploymentInsurance };
+}
 
-    tax = 0;
+async function personalTax(salaryBeforeTax, dependents) {
+    if (dependents < 0 || dependents === null)
+        return NaN;
+
+    if (salaryBeforeTax <= 0)
+        return 0;
+
+    var PersonalIncomeTaxDeduction = 11000000,
+        FamilyDeduction = 4400000;
 
     const personalIncomes = await personalIncomeController.List();
     const personalIncomes_sort = personalIncomes.sort((a, b) => a.tax - b.tax)
-    var remain = net - PersonalIncomeTaxDeduction - FamilyDeduction * dependents;
-    var personalTaxMax = 0;
+    var personalTaxMax = 0,
+        tax = 0;
+    var remain = salaryBeforeTax - PersonalIncomeTaxDeduction - FamilyDeduction * dependents;
+
     personalIncomes_sort.forEach((item) => {
         if (remain > 0) {
             if (remain <= (parseInt(item.max) - parseInt(item.min)) * 1000000) {
@@ -186,9 +207,122 @@ module.exports = new Controller;`
     if (remain > 0) {
         tax += remain * personalTaxMax / 100;
     }
+    salaryBeforeTax -= tax;
 
-    net -= tax;
+    return { tax: tax, net: salaryBeforeTax };
+}
 
-    response.render('index', { gross, socialInsurance, healthInsurance, unemploymentInsurance, tax, net });
-})`
+async function toNet(area, gross, dependents) {
+    if (gross <= 0)
+        return 0;
+
+    const insurance = await insuranceCalculator(area, gross);
+
+    var net = gross - (insurance.socialInsurance + insurance.healthInsurance + insurance.unemploymentInsurance);
+    const tax = await personalTax(net, dependents);
+
+    return {
+        gross,
+        socialInsurance: insurance.socialInsurance,
+        healthInsurance: insurance.healthInsurance,
+        unemploymentInsurance: insurance.unemploymentInsurance,
+        tax: tax.tax,
+        net: tax.net
+    }
+}
+
+module.exports = { insuranceCalculator, personalTax, toNet }`,
+
+    unittest: {
+        grossToNet_testjs: `const mock = require("./grossToNet");
+
+describe("Start unit test", () => {
+  describe("Test insuranceCalculator function()", () => {
+    test("gross is null, Should return NaN", async () => {
+      const gross = null;
+      const area = 1;
+      const result = await mock.insuranceCalculator(area, gross);
+      expect(result).toEqual(NaN);
+    });
+    test("area is null, Should return NaN", async () => {
+      const gross = 1200000;
+      const area = null;
+      const result = await mock.insuranceCalculator(area, gross);
+      expect(result).toEqual(NaN);
+    });
+    test("gross is invalid, Should return 0", async () => {
+      const gross = -1;
+      const area = 1;
+      const result = await mock.insuranceCalculator(area, gross);
+      expect(result).toEqual(0);
+    });
+    test("area is invalid, Should return NaN", async () => {
+      const gross = 1200000;
+      const area = -1;
+      const result = await mock.insuranceCalculator(area, gross);
+      expect(result).toEqual(NaN);
+    });
+  });
+  describe("Test personalTax function()", () => {
+    test("dependents is invalid, Should return 0", async () => {
+      const salaryBeforeTax = 11635000;
+      const dependents = -1;
+      const result = await mock.personalTax(salaryBeforeTax, dependents);
+      expect(result).toEqual(NaN);
+    });
+    test("salaryBeforeTax is invalid, Should return 0", async () => {
+      const salaryBeforeTax = -1;
+      const dependents = 1;
+      const result = await mock.personalTax(salaryBeforeTax, dependents);
+      expect(result).toEqual(0);
+    });
+  });
+  describe("Test toNet function()", () => {
+    test("gross is valid, Should return 0 ", async () => {
+      const dependents = 0;
+      const area = 1;
+      const gross = -1;
+
+      const result = await mock.toNet(area, gross, dependents);
+      expect(result).toEqual(0);
+    });
+  });
+});`,
+
+        grossToNet: `const Service = require("../src/services/grossToNet");
+
+exports.insuranceCalculator = async (area, gross) => {
+  const data = await Service.insuranceCalculator(area, gross);
+  switch (data) {
+    case 0:
+      return 0;
+    case NaN:
+      return NaN;
+    default:
+      return data;
+  }
+};
+exports.personalTax = async (net, dependents) => {
+  const data = await Service.personalTax(net, dependents);
+  switch (data) {
+    case 0:
+      return 0;
+    case NaN:
+      return NaN;
+    default:
+      return data;
+  }
+};
+exports.toNet = async (depend, area, gross) => {
+  const data = await Service.toNet(depend, area, gross);
+  switch (data) {
+    case 0:
+      return 0;
+    case NaN:
+      return NaN;
+    default:
+      return data;
+  }
+};`
+    }
 }
