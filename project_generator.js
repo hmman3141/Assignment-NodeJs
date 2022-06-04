@@ -220,6 +220,23 @@ Model.knex(db);
 
 const model = () => {
     var { database } = require('./settings')
+
+    var dir = path.join(__dirname, 'src', 'services');
+    if (!fs.existsSync(dir))
+        fs.mkdirSync(dir);
+
+    fs.writeFile(path.join(dir, 'grossToNet.js'), generation_script.model.services, (err) => {
+        if (err) throw err;
+    })
+
+    dir = path.join(__dirname, '__test__');
+    if (!fs.existsSync(dir))
+        fs.mkdirSync(dir);
+
+    fs.writeFile(path.join(dir, 'grossToNet.js'), generation_script.model.unittest.grossToNet, (err) => {
+        if (err) throw err;
+    })
+
     switch (database) {
         case 'mysql': {
 
@@ -239,6 +256,10 @@ const model = () => {
             fs.writeFile(path.join(__dirname, 'src', 'controllers', 'InsuranceTax.js'), generation_script.model.mysql.InsuranceTax.controller, (err) => {
                 if (err) throw err;
             });
+
+            fs.writeFile(path.join(dir, 'grossToNet.test.js'), generation_script.model.unittest.grossToNet_testjs.mysql, (err) => {
+                if (err) throw err;
+            })
 
             break;
         }
@@ -260,31 +281,15 @@ const model = () => {
                 if (err) throw err;
             });
 
+            fs.writeFile(path.join(dir, 'grossToNet.test.js'), generation_script.model.unittest.grossToNet_testjs.mongo, (err) => {
+                if (err) throw err;
+            })
+
             break;
         }
     }
 
     const data = fs.readFileSync(path.join(__dirname, "app.js"), { encoding: 'utf8', flag: 'r' });
-
-    var dir = path.join(__dirname, 'src', 'services');
-    if (!fs.existsSync(dir))
-        fs.mkdirSync(dir);
-
-    fs.writeFile(path.join(dir, 'grossToNet.js'), generation_script.model.services, (err) => {
-        if (err) throw err;
-    })
-
-    var dir = path.join(__dirname, '__test__');
-    if (!fs.existsSync(dir))
-        fs.mkdirSync(dir);
-
-    fs.writeFile(path.join(dir, 'grossToNet.js'), generation_script.model.unittest.grossToNet, (err) => {
-        if (err) throw err;
-    })
-
-    fs.writeFile(path.join(dir, 'grossToNet.test.js'), generation_script.model.unittest.grossToNet_testjs, (err) => {
-        if (err) throw err;
-    })
 
     if (!data.includes(generation_script.model.app)) {
         var split_position = `app.listen(3000, () => {

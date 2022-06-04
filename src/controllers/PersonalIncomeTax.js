@@ -1,12 +1,12 @@
-const personalIncomeTax = require('../models/PersonalIncomeTax');
+const PersonalIncomeTax = require('../models/PersonalIncomeTax');
 
 class Controller {
     async List() {
-        try {
-            let data = await personalIncomeTax.find({});
-            return data;
-        } catch (err) {
-            return err;
+        try{
+            const personalIncomeTax = await PersonalIncomeTax.query();
+            return personalIncomeTax;
+        }catch(err){
+            console.log(err);
         }
     }
 }

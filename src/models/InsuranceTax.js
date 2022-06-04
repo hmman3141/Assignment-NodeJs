@@ -1,13 +1,9 @@
-const mongoose = require('mongoose')
-const schema = new mongoose.Schema({
-    name: {
-        type: String,
-    },
-    tax: {
-        type: Number,
-    }
-}, {
-    collection: "InsuranceTax",
-});
+const {Model} = require('objection')
 
-module.exports = mongoose.model("InsuranceTax", schema);
+class InsuranceTax extends Model {
+    static get tableName() {
+        return 'InsuranceTax'
+    }
+}
+
+module.exports = InsuranceTax

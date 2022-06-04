@@ -1,12 +1,12 @@
-const insuranceTax = require('../models/InsuranceTax');
+const InsuranceTax = require('../models/InsuranceTax');
 
 class Controller {
     async List() {
-        try {
-            let data = await insuranceTax.find({});
-            return data;
-        } catch (err) {
-            return err;
+        try{
+            const insuranceTax = await InsuranceTax.query();
+            return insuranceTax;
+        }catch(err){
+            console.log(err);
         }
     }
 }

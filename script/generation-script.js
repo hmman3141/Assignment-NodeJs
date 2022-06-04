@@ -4,51 +4,8 @@ const model = require('./model-script')
 const seed = require('./seed-script')
 
 module.exports = {
-    create: {
-        index: create.index,
-        settings: create.settings,
-        app: create.app
-    },
-    database: {
-        mysql: {
-            connectdb: database.mysql.connectdb,
-            app: database.mysql.app
-        },
-        mongo: {
-            connectdb: database.mongo.connectdb,
-            app: database.mongo.app
-        }
-    },
-    model: {
-        mysql: {
-            PersonalIncomeTax: {
-                model: model.mysql.PersonalIncomeTax.model,
-                controller: model.mysql.PersonalIncomeTax.controller
-            },
-            InsuranceTax: {
-                model: model.mysql.InsuranceTax.model,
-                controller: model.mysql.InsuranceTax.controller
-            }
-        },
-        mongo: {
-            PersonalIncomeTax: {
-                model: model.mongo.PersonalIncomeTax.model,
-                controller: model.mongo.PersonalIncomeTax.controller
-            },
-            InsuranceTax: {
-                model: model.mongo.InsuranceTax.model,
-                controller: model.mongo.InsuranceTax.controller
-            }
-        },
-        app: model.app,
-        services: model.services,
-        unittest: {
-            grossToNet: model.unittest.grossToNet,
-            grossToNet_testjs: model.unittest.grossToNet_testjs
-        }
-    },
-    seed: {
-        mysql: seed.mysql,
-        mongo: seed.mongo
-    }
+    create: create,
+    database: database,
+    model: model,
+    seed: seed
 }

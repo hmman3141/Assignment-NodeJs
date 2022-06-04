@@ -77,6 +77,9 @@ async function personalTax(salaryBeforeTax, dependents) {
 }
 
 async function toNet(area, gross, dependents) {
+    if (gross == null || area == null || area <= 0 || area >= 5 || dependents < 0 || dependents === null)
+        return NaN;
+
     if (gross <= 0)
         return 0;
 

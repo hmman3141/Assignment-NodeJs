@@ -4,6 +4,21 @@ const bodyParser = require('body-parser');
 const { Database } = require('./src/connectdb.js')
 new Database();
 
+const { Model } = require('objection');
+const { host, port, user, password, dbName } = require('./settings')
+var conn = {
+    host: host,
+    port: port,
+    user: user,
+    password: password,
+    database: dbName
+}
+const db = require('knex')({
+    client: 'mysql',
+    connection: conn
+})
+Model.knex(db);
+
 const app = express();
 
 app.use(bodyParser.urlencoded({ extended: true }));
