@@ -16,7 +16,9 @@ project-cli model: Create database model
 ## Developer command
 You can use these commands after run "project-cli create"
 ```
+"docker-compose up" to install necessary image for docker if not exists and run docker image.
 "npm run start" to start the project.
 "npm run debug" to start the project in dev mode.
 "npm run test" to start unit test.
+"npm run test -- --coverage" to run coverage.
 ```
